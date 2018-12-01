@@ -11,20 +11,38 @@ using namespace std;
 
 Mat thres_image(Mat image){
      Mat image_ret=image.clone();
-     long average_shade=0;
-     for(int i=0;i<image.){
-     	for(int j=0;){
-	
+     uchar average_shade=0;
+     int pix=0;
+     for(int i=0;i<image.rows;++i){
+     	for(int j=0;j<image.cols;++j){
+		average_shade+=image.at<uchar>(i,j);
+		++pix;
 	
 	}
      
      }    
+     average_shade/=pix;
+
+     for(int i=0;i<image.rows;++i){
+     	for(int j=0;j<image.cols;++j){
+		if(image_ret.at<uchar>(i,j)>averagepix){
+			image_ret.at<uchar>(i,j)=0;
+		
+		}
+		else{
+			image_ret.at<uchar>(i,j)=255;
+
+		
+		}
+	
+	}
      
+     }
 
+     return image_ret;
+}//generic shitty thres function to be replaced with ostus function
 
-}
-
-Mat compute_skew(Mat image1,int lowest_thres){
+Mat compute_skew(Mat image1){
 	Mat image=image1.clone();
 	threshold(image1,image,lowest_thres,255,THRESH_BINARY);
 	bitwise_not(image,image);
