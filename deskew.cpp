@@ -58,7 +58,7 @@ Mat compute_skew(Mat image1,int lowest_thres){
 	return rotated;
 }
 
-int main( int argc, char** argv ){
+/*int main( int argc, char** argv ){
 
     Mat odd,even,thresEven,thresOdd;
     //char exit;
@@ -76,7 +76,7 @@ int main( int argc, char** argv ){
 
     waitKey(0);                                          // Wait for a keystroke in the window
     return 0;
-}
+}*/
 
 
 /*
