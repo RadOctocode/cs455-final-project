@@ -224,7 +224,7 @@ Mat remove_borders(Mat binary_image) {
 }
 
 void preprocessing_tests() {
-	Mat image = imread("glyphs/_m.png", CV_LOAD_IMAGE_COLOR);
+	Mat image = imread("sample_images/Sample_J.png", CV_LOAD_IMAGE_COLOR);
 	Mat gray_image;
  	cvtColor( image, gray_image, COLOR_BGR2GRAY );
  	namedWindow( "Gray Scale", WINDOW_AUTOSIZE);
@@ -244,7 +244,7 @@ void preprocessing_tests() {
 
  	waitKey(0); 	
 
- 	Mat image2 = imread("glyphs/B.png", CV_LOAD_IMAGE_COLOR);
+ 	Mat image2 = imread("glyphs/J.png", CV_LOAD_IMAGE_COLOR);
 	Mat gray_image2;
  	cvtColor( image2, gray_image2, COLOR_BGR2GRAY );
 
@@ -262,8 +262,22 @@ void preprocessing_tests() {
 
  	waitKey(0);
 
- 	float p_overlap = percentage_overlap(negative(bin_img), negative(bin_img2));
- 	cout << "percentage overlap " << p_overlap << endl;
+ 	//basic kernel
+ 	Kernel erosion_kernel1(1, 1, 3, 3);
+ 	int erosion_data_2D_array[3][3] = {{0,1,0}, {1,1,1}, {0,1,0}};
+ 	for(int i=0; i< 3; i++) {
+ 		for(int j=0; j< 3; j++) {
+ 			erosion_kernel1.data[i][j] = erosion_data_2D_array[i][j];
+ 		}
+ 	}	
+ 	Mat skeletoned = negative(skeleton(negative(scaled), erosion_kernel1));
+ 	namedWindow( "Skeletoned Image", WINDOW_AUTOSIZE);
+ 	imshow( "Skeletoned Image", skeletoned);
+
+ 	waitKey(0);
+
+ 	float p_overlap = percentage_overlap(negative(skeletoned), negative(bin_img2_removed_borders));
+ 	cout << "percentage overlap %: " << p_overlap*100 << "%" << endl;
 }
 
 
