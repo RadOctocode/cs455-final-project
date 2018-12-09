@@ -2,12 +2,15 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <vector>
 
 using namespace cv;
 using namespace std;
 
-int main(int argc, char* argv[]){
-	string input_image = argv[1];
+
+vector<Mat> extract(string input_image) {
+	// string input_image = argv[1];
+	vector<Mat> outs;
 	Mat orig_img = imread(input_image);
 	Mat out_img = orig_img;
 	pyrDown(orig_img, out_img);
@@ -53,11 +56,33 @@ int main(int argc, char* argv[]){
 		double ratio = (double)countNonZero(maskROI)/(rect.width*rect.height);
 		if(ratio > .50 && (rect.height > 10 && rect.width > 10)){
 			rectangle(out_img, rect, Scalar(0,255,0), 2);
+			Mat cropped = out_img(rect);
+			outs.push_back(cropped);
 		}
 		contour_index = hierarchy[contour_index][0];
 	}
-	imwrite("final.jpg", out_img);	
-		
+	// imwrite("final.jpg", out_img);	
+	
+	// waitKey();
+	// destroyAllWindows();
+	return outs;
+}
+
+int main(int argc, char* argv[]){
+	string input(argv[1]);
+	vector<Mat> images = extract(input);
+	for(int i=0; i < images.size(); i++) {
+		namedWindow("Cropped" + to_string(i), WINDOW_AUTOSIZE);
+		imshow("Cropped" + to_string(i), images[i]);
+		imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
+		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
+
+		// cout << "height, width: " << rect.height << " " << rect.width << endl;
+	}
 	waitKey();
 	destroyAllWindows();
+	return 0;
 }
+
+
+
