@@ -9,42 +9,42 @@
 using namespace cv;
 using namespace std;
 
-Mat thres_image(Mat image){
-     Mat image_ret=image.clone();
-     uchar average_shade=0;
-     int pix=0;
-     for(int i=0;i<image.rows;++i){
-     	for(int j=0;j<image.cols;++j){
-		average_shade+=image.at<uchar>(i,j);
-		++pix;
+// Mat thres_image(Mat image){
+//      Mat image_ret=image.clone();
+//      uchar average_shade=0;
+//      int pix=0;
+//      for(int i=0;i<image.rows;++i){
+//      	for(int j=0;j<image.cols;++j){
+// 		average_shade+=image.at<uchar>(i,j);
+// 		++pix;
 	
-	}
+// 	}
      
-     }    
-     average_shade/=pix;
+//      }    
+//      average_shade/=pix;
 
-     for(int i=0;i<image.rows;++i){
-     	for(int j=0;j<image.cols;++j){
-		if(image_ret.at<uchar>(i,j)>averagepix){
-			image_ret.at<uchar>(i,j)=0;
+//      for(int i=0;i<image.rows;++i){
+//      	for(int j=0;j<image.cols;++j){
+// 		if(image_ret.at<uchar>(i,j)>averagepix){
+// 			image_ret.at<uchar>(i,j)=0;
 		
-		}
-		else{
-			image_ret.at<uchar>(i,j)=255;
+// 		}
+// 		else{
+// 			image_ret.at<uchar>(i,j)=255;
 
 		
-		}
+// 		}
 	
-	}
+// 	}
      
-     }
+//      }
 
-     return image_ret;
-}//generic shitty thres function to be replaced with ostus function
+//      return image_ret;
+// }//generic shitty thres function to be replaced with ostus function
 
 Mat compute_skew(Mat image1){
 	Mat image=image1.clone();
-	threshold(image1,image,lowest_thres,255,THRESH_BINARY);
+	threshold(image1,image,125,255,THRESH_BINARY);
 	bitwise_not(image,image);
 	
 	vector<Point>pts;
@@ -76,14 +76,14 @@ Mat compute_skew(Mat image1){
 	return rotated;
 }
 
-/*int main( int argc, char** argv ){
+int main( int argc, char** argv ){
 
     Mat odd,even,thresEven,thresOdd;
     //char exit;
-    even = imread("test2.jpg", 0);   // Read the file
+    even = imread(argv[1], 0);   // Read the file
     Mat test=even.clone();
     imshow("original",even);
-    imshow("rotated",compute_skew(even,75));
+    imshow("rotated",compute_skew(even));
     //imshow("My N1",N1(even));
     //imshow("My N2",N2(even));
     //imshow("My N3",N3(even,traindata));
@@ -94,7 +94,7 @@ Mat compute_skew(Mat image1){
 
     waitKey(0);                                          // Wait for a keystroke in the window
     return 0;
-}*/
+}
 
 
 /*

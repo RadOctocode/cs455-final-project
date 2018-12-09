@@ -11,38 +11,38 @@ int main(int argc, char* argv[]){
 	Mat orig_img = imread(input_image);
 	Mat out_img = orig_img;
 	pyrDown(orig_img, out_img);
-	namedWindow("Original Out Image", WINDOW_AUTOSIZE);
-	imshow("Original Out Image", out_img);
+	// namedWindow("Original Out Image", WINDOW_AUTOSIZE);
+	// imshow("Original Out Image", out_img);
 	Mat small;
 	cvtColor(out_img, small, CV_BGR2GRAY);
 
-	namedWindow("Original Image", WINDOW_AUTOSIZE);
-	imshow("Original Image", orig_img);
+	// namedWindow("Original Image", WINDOW_AUTOSIZE);
+	// imshow("Original Image", orig_img);
 
 	Mat grad;
 	Mat morphKernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
 	morphologyEx(small, grad, MORPH_GRADIENT, morphKernel);
-	namedWindow("Grad Image", WINDOW_AUTOSIZE);
-	imshow("Grad Image", grad);
+	// namedWindow("Grad Image", WINDOW_AUTOSIZE);
+	// imshow("Grad Image", grad);
 
 	Mat bin_img;
 	threshold(grad, bin_img, 0.0, 255.0, THRESH_BINARY | THRESH_OTSU);
-	namedWindow("Binary Image", WINDOW_AUTOSIZE);
-	imshow("Binary Image", bin_img);
+	// namedWindow("Binary Image", WINDOW_AUTOSIZE);
+	// imshow("Binary Image", bin_img);
 
 	Mat connected;
 	morphKernel = getStructuringElement(MORPH_RECT, Size(9, 1));
 	morphologyEx(bin_img, connected, MORPH_CLOSE, morphKernel);
-	namedWindow("Connected Image", WINDOW_AUTOSIZE);
-	imshow("Connected Image", connected);
+	// namedWindow("Connected Image", WINDOW_AUTOSIZE);
+	// imshow("Connected Image", connected);
 
 	Mat mask = Mat::zeros(bin_img.size(), CV_8UC1);
 	vector<vector<Point>> contour;
 	vector<Vec4i> hierarchy;
 	findContours(connected, contour, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
 
-	namedWindow("Out Image", WINDOW_AUTOSIZE);
-	imshow("Out Image", out_img);
+	// namedWindow("Out Image", WINDOW_AUTOSIZE);
+	// imshow("Out Image", out_img);
 	
 	int contour_index = 0;
 	while(contour_index >= 0){
