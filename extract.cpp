@@ -123,7 +123,7 @@ Mat createBinaryImage(Mat img){
 	
 	return bin_img;
 }
-Mat regionDetection(Mat& img){
+vector<Mat> regionDetection(Mat& img){
 	int min_size = INT_MAX;
 	int max_size = 0;
 	int min_x = -1;
@@ -131,6 +131,7 @@ Mat regionDetection(Mat& img){
 	int max_x = -1;
 	int max_y = -1;
 
+	vector<Mat> outs;
 	//color all regions with medium color (120)
 	//find the smallest and largest regions
 	for(int x = 0; x < img.rows; x++){
@@ -138,6 +139,17 @@ Mat regionDetection(Mat& img){
 			if(img.at<uchar>(x,y) == 255){
 				vector<int> matri = connected_comp(img, x, y, 120, 255);
 				int total_pixels = matri.at(0);
+				int diff_x = matri.at(3) - matri.at(1);
+				int diff_y = matri.at(4) - matri.at(2);	
+				Rect roi = Rect(matri.at(2), matri.at(1), diff_y, diff_x);
+				if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
+					Mat cropped = img(roi);
+				//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
+				//	imshow("Ret Image", cropped);
+				//	waitKey();
+				//	destroyAllWindows();
+					outs.push_back(cropped);
+				}
 
 			
 				if(total_pixels < min_size){
@@ -158,25 +170,34 @@ Mat regionDetection(Mat& img){
 	vector<int> matri = connected_comp(img, min_x, min_y, 60, 120);
 	int diff_x = matri.at(3) - matri.at(1);
 	int diff_y = matri.at(4) - matri.at(2);	
-	cout << "matri.at(1) " << matri.at(1) << endl;
-	cout << "matri.at(2) " << matri.at(2) << endl;
-	cout << "matri.at(3) " << matri.at(3) << endl;
-	cout << "matri.at(4) " << matri.at(4) << endl;
-	cout << "diff_x " << diff_x << endl;
-	cout << "diff_y " << diff_y << endl;
-	cout << img.rows << " " << img.cols << endl;
-	Range rows(matri.at(1), diff_x);
-	Range cols(matri.at(3), diff_y);
+	Range cols(matri.at(1), diff_x);
+	Range rows(matri.at(3), diff_y);
 	
-	Rect roi = Rect(matri.at(1), matri.at(2), diff_x, diff_y);
-	Mat cropped = img(roi);
-	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-	imshow("Ret Image", cropped);
-	waitKey();
-	destroyAllWindows();
-	connected_comp(img, max_x, max_y, 200, 120);
+	Rect roi = Rect(matri.at(2), matri.at(1), diff_y, diff_x);
 	
-	return img;
+	if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
+		Mat cropped = img(roi);
+	//	outs.push_back(cropped);
+	//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
+	//	imshow("Ret Image", cropped);
+	//	waitKey();
+	//	destroyAllWindows();
+	}
+
+	matri = connected_comp(img, max_x, max_y, 200, 120);
+	diff_x = matri.at(3) - matri.at(1);
+	diff_y = matri.at(4) - matri.at(2);	
+	roi = Rect(matri.at(2), matri.at(1), diff_y, diff_x);
+	if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
+		Mat cropped = img(roi);
+	//	outs.push_back(cropped);
+	//	namedWindow("Ret1 Image", WINDOW_AUTOSIZE);
+	//	imshow("Ret1 Image", cropped);
+	//	waitKey();
+	//	destroyAllWindows();
+	}
+	
+	return outs;
 }
 
 vector<Mat> extract(string input_image) {
@@ -282,7 +303,19 @@ int main(int argc, char* argv[]){
 	    cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
 	    cv::rectangle(bin_img, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 2, CV_AA);
 	}
-	Mat ret_img = regionDetection(bin_img);
+	vector<Mat> ret_img = regionDetection(bin_img);
+	for(int x = 0; x < ret_img.size(); x++){
+		
+		Mat grey_ret = ret_img[x];
+		Mat src = ret_img[x];
+		//cvtColor(src, grey_ret, CV_BGR2GRAY);
+		Mat bin_img_ret;
+		threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
+		namedWindow("Ret" + to_string(x), WINDOW_AUTOSIZE);
+		imshow("Ret" + to_string(x), bin_img_ret);
+		imwrite("Ret" + to_string(x) + ".jpg", bin_img_ret);	
+		
+	}
 	//namedWindow("Ret Image", WINDOW_AUTOSIZE);
 	//imshow("Ret Image", bin_img);
 	
