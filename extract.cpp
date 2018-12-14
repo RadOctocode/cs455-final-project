@@ -144,11 +144,13 @@ vector<Mat> regionDetection(Mat& img){
 				Rect roi = Rect(matri.at(2), matri.at(1), diff_y, diff_x);
 				if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
 					Mat cropped = img(roi);
+					Mat bin_img_ret;
+					threshold(cropped, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
 				//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
 				//	imshow("Ret Image", cropped);
 				//	waitKey();
 				//	destroyAllWindows();
-					outs.push_back(cropped);
+					outs.push_back(bin_img_ret);
 				}
 
 			
@@ -283,9 +285,9 @@ vector<vector<Mat>> get_individual_characters(vector<Mat> images){
 		cout << characters_words[i].size() << endl;
 		vector<Mat> ret_img = characters_words.at(i);
 		for(int x = 0; x < ret_img.size(); x++){
-			Mat grey_ret = ret_img[x];
-			Mat bin_img_ret;
-			threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
+//			Mat grey_ret = ret_img[x];
+			Mat bin_img_ret = ret_img[x];
+//			threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
 			namedWindow("Ret" + to_string(count), WINDOW_AUTOSIZE);
 			imshow("Ret" + to_string(count), bin_img_ret);
 			imwrite("Ret" + to_string(count) + ".jpg", bin_img_ret);	
@@ -305,7 +307,17 @@ int main(int argc, char* argv[]){
 		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
 	}
 	
-	get_individual_characters(images);
+	vector<vector<Mat>> chars = get_individual_characters(images);
+	cout << chars[2].size() << endl;
+	
+	int count = 0;
+	for(int x = 0; x < chars.size(); x++){
+		for(int y = 0; y < chars[x].size(); y++){
+			namedWindow("chars" + to_string(count), WINDOW_AUTOSIZE);
+			imshow("chars" + to_string(count), chars[x][y]);
+			count++;
+		}
+	}
 
 	waitKey();
 	destroyAllWindows();
