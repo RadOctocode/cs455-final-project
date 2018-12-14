@@ -261,16 +261,7 @@ vector<Mat> extract(string input_image) {
 	return outs;
 }
 
-int main(int argc, char* argv[]){
-	string input(argv[1]);
-	vector<Mat> images = extract(input);
-	for(int i=0; i < images.size(); i++) {
-		namedWindow("Cropped" + to_string(i), WINDOW_AUTOSIZE);
-		imshow("Cropped" + to_string(i), images[i]);
-		imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
-		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
-	}
-
+vector<vector<Mat>> get_individual_characters(vector<Mat> images){
 	vector<vector<Mat>> characters_words;
 
 	for(int x = 0; x < images.size(); x++){
@@ -302,6 +293,20 @@ int main(int argc, char* argv[]){
 		}
 	}
 	
+	return characters_words;
+}
+int main(int argc, char* argv[]){
+	string input(argv[1]);
+	vector<Mat> images = extract(input);
+	for(int i=0; i < images.size(); i++) {
+		namedWindow("Cropped" + to_string(i), WINDOW_AUTOSIZE);
+		imshow("Cropped" + to_string(i), images[i]);
+		imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
+		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
+	}
+	
+	get_individual_characters(images);
+
 	waitKey();
 	destroyAllWindows();
 	return 0;
