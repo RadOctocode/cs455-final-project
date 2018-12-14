@@ -269,55 +269,38 @@ int main(int argc, char* argv[]){
 		imshow("Cropped" + to_string(i), images[i]);
 		imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
 		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
+	}
 
-		// cout << "height, width: " << rect.height << " " << rect.width << endl;
+	vector<vector<Mat>> characters_words;
+
+	for(int x = 0; x < images.size(); x++){
+		Mat src_img = images[x];
+		Mat grey;
+		cvtColor(src_img, grey, CV_BGR2GRAY);
+		Mat bin_img;
+		threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
+		namedWindow("Bin Image", WINDOW_AUTOSIZE);
+		imshow("Bin Image", bin_img);
+		bitwise_not(bin_img, bin_img);
+		namedWindow("Bin2 Image", WINDOW_AUTOSIZE);
+		imshow("Bin2 Image", bin_img);
+		vector<Mat> ret_img = regionDetection(bin_img);
+		characters_words.push_back(ret_img);
 	}
-	Mat src_img = images[1];
-	Mat grey;
-	cvtColor(src_img, grey, CV_BGR2GRAY);
-	Mat bin_img;
-	threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
-	namedWindow("Bin Image", WINDOW_AUTOSIZE);
-	imshow("Bin Image", bin_img);
-	bitwise_not(bin_img, bin_img);
-	namedWindow("Bin2 Image", WINDOW_AUTOSIZE);
-	imshow("Bin2 Image", bin_img);
-	
-	std::vector<std::vector<cv::Point>> contours;
-	/*
-	cv::findContours(bin_img, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-	for (int i=0; i<contours.size(); ++i)
-	{
-	    cv::Rect r = cv::boundingRect(contours.at(i));
-	    cv::rectangle(bin_img, r, CV_RGB(255,0,0));
-	}*/
-	std::vector<cv::Point> points;
-	cv::findContours(bin_img, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-	for (size_t i=0; i<contours.size(); i++) {
-	    for (size_t j = 0; j < contours[i].size(); j++) {
-		cv::Point p = contours[i][j];
-		points.push_back(p);
-	    }
+	int count = 0;
+	for(int i = 0; i < characters_words.size(); i++){
+		cout << characters_words[i].size() << endl;
+		vector<Mat> ret_img = characters_words.at(i);
+		for(int x = 0; x < ret_img.size(); x++){
+			Mat grey_ret = ret_img[x];
+			Mat bin_img_ret;
+			threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
+			namedWindow("Ret" + to_string(count), WINDOW_AUTOSIZE);
+			imshow("Ret" + to_string(count), bin_img_ret);
+			imwrite("Ret" + to_string(count) + ".jpg", bin_img_ret);	
+			count++;	
+		}
 	}
-	if(points.size() > 0){
-	    cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
-	    cv::rectangle(bin_img, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 2, CV_AA);
-	}
-	vector<Mat> ret_img = regionDetection(bin_img);
-	for(int x = 0; x < ret_img.size(); x++){
-		
-		Mat grey_ret = ret_img[x];
-		Mat src = ret_img[x];
-		//cvtColor(src, grey_ret, CV_BGR2GRAY);
-		Mat bin_img_ret;
-		threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
-		namedWindow("Ret" + to_string(x), WINDOW_AUTOSIZE);
-		imshow("Ret" + to_string(x), bin_img_ret);
-		imwrite("Ret" + to_string(x) + ".jpg", bin_img_ret);	
-		
-	}
-	//namedWindow("Ret Image", WINDOW_AUTOSIZE);
-	//imshow("Ret Image", bin_img);
 	
 	waitKey();
 	destroyAllWindows();
