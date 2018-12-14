@@ -2,11 +2,163 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <queue>
 #include <vector>
 
 using namespace cv;
 using namespace std;
+int histogram[256] = {0};
 
+//generate histogram int array given image
+void createHistogram(Mat img){
+
+	for(int x = 0; x < 256; x++){
+		histogram[x] = 0;
+	}
+	
+	for(int x = 0; x < img.rows; x++){
+		for(int y = 0; y < img.cols; y++){
+			histogram[img.at<uchar>(x,y)] += 1;
+		}
+	}
+}
+vector<int> connected_comp(Mat& img, int x, int y, uchar set_color, uchar change_color){
+
+    queue<int> queue_x;
+    queue<int> queue_y;
+    queue_x.push(x);
+    queue_y.push(y);
+
+    int pixelCount = 0;
+
+    vector<int> matrix;
+    int min_x, min_y, max_x, max_y;
+    min_x  = img.rows;
+    min_y  = img.cols;
+    max_x  = -1;
+    max_y  = -1;
+    
+
+    while(!queue_x.empty() && !queue_y.empty()) {
+        int i = queue_x.front();
+        int j = queue_y.front();
+        queue_x.pop();
+        queue_y.pop();
+
+        // Check if visited before continuing
+        if(img.at<uchar>(i,j) != set_color){
+
+		if(i < min_x){
+			min_x = i;
+		}
+		if(j < min_y){
+			min_y = j;
+		}
+		if(i > max_x){
+			max_x = i;
+		}
+		if(j > max_y){
+			max_y = j;
+		}
+		
+		//increase size of found region
+		pixelCount++;
+
+		//set as visited
+		img.at<uchar>(i,j) = set_color;
+
+		//find surrounding components that have not been visited
+		if(j+1 < img.cols && img.at<uchar>(i,j+1) == change_color){
+			queue_x.push(i);
+			queue_y.push(j+1);
+		}
+		if(j-1 >= 0 && img.at<uchar>(i,j-1) == change_color){
+			queue_x.push(i);	
+			queue_y.push(j-1);
+		}
+		if(i+1 < img.rows && img.at<uchar>(i+1,j) == change_color){
+			queue_x.push(i+1);
+			queue_y.push(j);
+		}
+		if(i-1 >= 0 && img.at<uchar>(i-1,j) == change_color){
+			queue_x.push(i-1);
+			queue_y.push(j);
+		}
+	}
+    }
+  
+    matrix.push_back(pixelCount);
+    matrix.push_back(min_x);
+    matrix.push_back(min_y);
+    matrix.push_back(max_x);
+    matrix.push_back(max_y);
+ 
+    //return size 
+    //return pixelCount;
+    return matrix;
+}
+//create binary image
+Mat createBinaryImage(Mat img){
+	int total_pixels = img.rows * img.cols;
+	createHistogram(img);
+	int threshold = 0;
+	
+	//find threshold by calculating the averages of pixels
+	for(int x = 0; x < 256; x++){
+		threshold += x * histogram[x];
+	}
+	threshold = threshold/total_pixels;
+	cout << "Threshold Value: " << threshold << endl;
+	
+	Mat bin_img = img.clone();
+	for(int x = 0; x < bin_img.rows; x++){
+		for(int y = 0; y < bin_img.cols; y++){
+			if(bin_img.at<uchar>(x,y) < threshold)
+				bin_img.at<uchar>(x,y) = 0;
+			else
+				bin_img.at<uchar>(x,y) = 255;
+				
+		}
+	}
+	
+	return bin_img;
+}
+Mat regionDetection(Mat& img){
+	int min_size = INT_MAX;
+	int max_size = 0;
+	int min_x = -1;
+	int min_y = -1;
+	int max_x = -1;
+	int max_y = -1;
+
+	//color all regions with medium color (120)
+	//find the smallest and largest regions
+	for(int x = 0; x < img.rows; x++){
+		for(int y = 0; y < img.cols; y++){
+			if(img.at<uchar>(x,y) == 255){
+				vector<int> matri = connected_comp(img, x, y, 120, 255);
+				int total_pixels = matri.at(0);
+
+				if(total_pixels < min_size){
+					min_size = total_pixels;
+					min_x = x;
+					min_y = y;
+				}else if(total_pixels > max_size){
+					max_size = total_pixels;
+					max_x = x;
+					max_y = y;
+				}
+
+			}	
+		}
+	}
+
+	//color smallest and largest regions	
+	connected_comp(img, min_x, min_y, 60, 120);
+	connected_comp(img, max_x, max_y, 200, 120);
+	
+	return img;
+}
 
 vector<Mat> extract(string input_image) {
 	// string input_image = argv[1];
@@ -61,6 +213,7 @@ vector<Mat> extract(string input_image) {
 		}
 		contour_index = hierarchy[contour_index][0];
 	}
+
 	// imwrite("final.jpg", out_img);	
 	
 	// waitKey();
@@ -79,6 +232,41 @@ int main(int argc, char* argv[]){
 
 		// cout << "height, width: " << rect.height << " " << rect.width << endl;
 	}
+	Mat src_img = images[1];
+	Mat grey;
+	cvtColor(src_img, grey, CV_BGR2GRAY);
+	Mat bin_img;
+	threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
+	namedWindow("Bin Image", WINDOW_AUTOSIZE);
+	imshow("Bin Image", bin_img);
+	bitwise_not(bin_img, bin_img);
+	namedWindow("Bin2 Image", WINDOW_AUTOSIZE);
+	imshow("Bin2 Image", bin_img);
+	
+	std::vector<std::vector<cv::Point>> contours;
+	/*
+	cv::findContours(bin_img, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	for (int i=0; i<contours.size(); ++i)
+	{
+	    cv::Rect r = cv::boundingRect(contours.at(i));
+	    cv::rectangle(bin_img, r, CV_RGB(255,0,0));
+	}*/
+	std::vector<cv::Point> points;
+	cv::findContours(bin_img, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	for (size_t i=0; i<contours.size(); i++) {
+	    for (size_t j = 0; j < contours[i].size(); j++) {
+		cv::Point p = contours[i][j];
+		points.push_back(p);
+	    }
+	}
+	if(points.size() > 0){
+	    cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
+	    cv::rectangle(bin_img, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 2, CV_AA);
+	}
+	//Mat ret_img = regionDetection(bin_img);
+	namedWindow("Ret Image", WINDOW_AUTOSIZE);
+	imshow("Ret Image", bin_img);
+	
 	waitKey();
 	destroyAllWindows();
 	return 0;
