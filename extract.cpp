@@ -139,6 +139,7 @@ Mat regionDetection(Mat& img){
 				vector<int> matri = connected_comp(img, x, y, 120, 255);
 				int total_pixels = matri.at(0);
 
+			
 				if(total_pixels < min_size){
 					min_size = total_pixels;
 					min_x = x;
@@ -154,7 +155,25 @@ Mat regionDetection(Mat& img){
 	}
 
 	//color smallest and largest regions	
-	connected_comp(img, min_x, min_y, 60, 120);
+	vector<int> matri = connected_comp(img, min_x, min_y, 60, 120);
+	int diff_x = matri.at(3) - matri.at(1);
+	int diff_y = matri.at(4) - matri.at(2);	
+	cout << "matri.at(1) " << matri.at(1) << endl;
+	cout << "matri.at(2) " << matri.at(2) << endl;
+	cout << "matri.at(3) " << matri.at(3) << endl;
+	cout << "matri.at(4) " << matri.at(4) << endl;
+	cout << "diff_x " << diff_x << endl;
+	cout << "diff_y " << diff_y << endl;
+	cout << img.rows << " " << img.cols << endl;
+	Range rows(matri.at(1), diff_x);
+	Range cols(matri.at(3), diff_y);
+	
+	Rect roi = Rect(matri.at(1), matri.at(2), diff_x, diff_y);
+	Mat cropped = img(roi);
+	namedWindow("Ret Image", WINDOW_AUTOSIZE);
+	imshow("Ret Image", cropped);
+	waitKey();
+	destroyAllWindows();
 	connected_comp(img, max_x, max_y, 200, 120);
 	
 	return img;
@@ -166,38 +185,38 @@ vector<Mat> extract(string input_image) {
 	Mat orig_img = imread(input_image);
 	Mat out_img = orig_img;
 	pyrDown(orig_img, out_img);
-	// namedWindow("Original Out Image", WINDOW_AUTOSIZE);
-	// imshow("Original Out Image", out_img);
+	namedWindow("Original Out Image", WINDOW_AUTOSIZE);
+	imshow("Original Out Image", out_img);
 	Mat small;
 	cvtColor(out_img, small, CV_BGR2GRAY);
 
-	// namedWindow("Original Image", WINDOW_AUTOSIZE);
-	// imshow("Original Image", orig_img);
+	namedWindow("Original Image", WINDOW_AUTOSIZE);
+	imshow("Original Image", orig_img);
 
 	Mat grad;
 	Mat morphKernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
 	morphologyEx(small, grad, MORPH_GRADIENT, morphKernel);
-	// namedWindow("Grad Image", WINDOW_AUTOSIZE);
-	// imshow("Grad Image", grad);
+	namedWindow("Grad Image", WINDOW_AUTOSIZE);
+	imshow("Grad Image", grad);
 
 	Mat bin_img;
 	threshold(grad, bin_img, 0.0, 255.0, THRESH_BINARY | THRESH_OTSU);
-	// namedWindow("Binary Image", WINDOW_AUTOSIZE);
-	// imshow("Binary Image", bin_img);
+	namedWindow("Binary Image", WINDOW_AUTOSIZE);
+	imshow("Binary Image", bin_img);
 
 	Mat connected;
 	morphKernel = getStructuringElement(MORPH_RECT, Size(9, 1));
 	morphologyEx(bin_img, connected, MORPH_CLOSE, morphKernel);
-	// namedWindow("Connected Image", WINDOW_AUTOSIZE);
-	// imshow("Connected Image", connected);
+	namedWindow("Connected Image", WINDOW_AUTOSIZE);
+	imshow("Connected Image", connected);
 
 	Mat mask = Mat::zeros(bin_img.size(), CV_8UC1);
 	vector<vector<Point>> contour;
 	vector<Vec4i> hierarchy;
 	findContours(connected, contour, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
 
-	// namedWindow("Out Image", WINDOW_AUTOSIZE);
-	// imshow("Out Image", out_img);
+	namedWindow("Out Image", WINDOW_AUTOSIZE);
+	imshow("Out Image", out_img);
 	
 	int contour_index = 0;
 	while(contour_index >= 0){
@@ -214,7 +233,7 @@ vector<Mat> extract(string input_image) {
 		contour_index = hierarchy[contour_index][0];
 	}
 
-	// imwrite("final.jpg", out_img);	
+	imwrite("final.jpg", out_img);	
 	
 	// waitKey();
 	// destroyAllWindows();
@@ -263,9 +282,9 @@ int main(int argc, char* argv[]){
 	    cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
 	    cv::rectangle(bin_img, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 2, CV_AA);
 	}
-	//Mat ret_img = regionDetection(bin_img);
-	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-	imshow("Ret Image", bin_img);
+	Mat ret_img = regionDetection(bin_img);
+	//namedWindow("Ret Image", WINDOW_AUTOSIZE);
+	//imshow("Ret Image", bin_img);
 	
 	waitKey();
 	destroyAllWindows();
