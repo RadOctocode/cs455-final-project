@@ -144,11 +144,13 @@ vector<Mat> regionDetection(Mat& img){
 				Rect roi = Rect(matri.at(2), matri.at(1), diff_y, diff_x);
 				if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
 					Mat cropped = img(roi);
+					Mat bin_img_ret;
+					threshold(cropped, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
 				//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
 					imshow("Ret Image", cropped);
 				//	waitKey();
 				//	destroyAllWindows();
-					outs.push_back(cropped);
+					outs.push_back(bin_img_ret);
 				}
 
 			
@@ -332,8 +334,8 @@ int main(int argc, char* argv[]){
 	// 	imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
 	// 	cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
 	// }
-	
 	// vector<vector<Mat>> characters = get_individual_characters(images);
+
 
 	vector<vector<Mat>> characters;
 	get_individual_characters(images, characters);
