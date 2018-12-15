@@ -5,7 +5,7 @@
 #include <queue>
 #include <iostream>
 #include <vector>
-#include "morphological_ops.cpp"
+#include "morphological_ops.hpp"
 
 void skeleton_tests();
 void preprocessing_tests();
@@ -18,7 +18,7 @@ Mat subtract(Mat bin_img1, Mat bin_img2);
 
 Mat remove_borders(Mat binary_image);
 //scale img1  to img2 size
-Mat scale_image(Mat bin_img1, Mat bin_img2, String axis);
+Mat scale_image(Mat bin_img1, Mat bin_img2, char axis);
 
 //percentage value  0 -> 1
 //percentage image 1 overlaps image 2
@@ -29,11 +29,13 @@ float percentage_overlap(Mat bin_img1, Mat bin_img2);
 //scale either along "x" or "y"
 //percentage overlap for 2 binary images
 
+/*
 int main() {
 	// skeleton_tests();
 	preprocessing_tests();
 	return 0;
 }
+*/
 
 Mat subtract(Mat bin_img1, Mat bin_img2) {
 	if(bin_img1.rows != bin_img2.rows || bin_img1.cols != bin_img2.cols) 
@@ -162,7 +164,7 @@ Mat scale_image(Mat bin_img1, Mat bin_img2, char axis) {
 	float sz = 0;
 	if(axis == 'x') sz = bin_img2.cols /(float)bin_img1.cols; 
 	else sz = bin_img2.rows /(float)bin_img1.rows; 
-	cout << "Scaled: " << sz << endl;
+	// cout << "Scaled: " << sz << endl;
 	resize(bin_img1, bin_img1_copy, Size((int)(bin_img1.cols*sz), (int)(bin_img1.rows*sz)));
 	return bin_img1_copy;
 }
@@ -277,7 +279,7 @@ void preprocessing_tests() {
  	waitKey(0);
 
  	float p_overlap = percentage_overlap(negative(skeletoned), negative(bin_img2_removed_borders));
- 	cout << "percentage overlap %: " << p_overlap*100 << "%" << endl;
+ 	// cout << "percentage overlap %: " << p_overlap*100 << "%" << endl;
 }
 
 

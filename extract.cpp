@@ -145,7 +145,7 @@ vector<Mat> regionDetection(Mat& img){
 				if(roi.x >= 0 && roi.y >= 0 && roi.width + roi.x < img.cols && roi.height + roi.y < img.rows){
 					Mat cropped = img(roi);
 				//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-				//	imshow("Ret Image", cropped);
+					imshow("Ret Image", cropped);
 				//	waitKey();
 				//	destroyAllWindows();
 					outs.push_back(cropped);
@@ -156,7 +156,7 @@ vector<Mat> regionDetection(Mat& img){
 					min_size = total_pixels;
 					min_x = x;
 					min_y = y;
-				}else if(total_pixels > max_size){
+				} else if(total_pixels > max_size){
 					max_size = total_pixels;
 					max_x = x;
 					max_y = y;
@@ -179,7 +179,7 @@ vector<Mat> regionDetection(Mat& img){
 		Mat cropped = img(roi);
 	//	outs.push_back(cropped);
 	//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-	//	imshow("Ret Image", cropped);
+		imshow("Ret Image", cropped);
 	//	waitKey();
 	//	destroyAllWindows();
 	}
@@ -192,7 +192,7 @@ vector<Mat> regionDetection(Mat& img){
 		Mat cropped = img(roi);
 	//	outs.push_back(cropped);
 	//	namedWindow("Ret1 Image", WINDOW_AUTOSIZE);
-	//	imshow("Ret1 Image", cropped);
+		// imshow("Ret1 Image", cropped);
 	//	waitKey();
 	//	destroyAllWindows();
 	}
@@ -207,29 +207,29 @@ vector<Mat> extract(string input_image) {
 	Mat out_img = orig_img;
 	pyrDown(orig_img, out_img);
 	namedWindow("Original Out Image", WINDOW_AUTOSIZE);
-	imshow("Original Out Image", out_img);
+	// imshow("Original Out Image", out_img);
 	Mat small;
 	cvtColor(out_img, small, CV_BGR2GRAY);
 
 	namedWindow("Original Image", WINDOW_AUTOSIZE);
-	imshow("Original Image", orig_img);
+	// imshow("Original Image", orig_img);
 
 	Mat grad;
 	Mat morphKernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
 	morphologyEx(small, grad, MORPH_GRADIENT, morphKernel);
 	namedWindow("Grad Image", WINDOW_AUTOSIZE);
-	imshow("Grad Image", grad);
+	// imshow("Grad Image", grad);
 
 	Mat bin_img;
 	threshold(grad, bin_img, 0.0, 255.0, THRESH_BINARY | THRESH_OTSU);
 	namedWindow("Binary Image", WINDOW_AUTOSIZE);
-	imshow("Binary Image", bin_img);
+	// imshow("Binary Image", bin_img);
 
 	Mat connected;
 	morphKernel = getStructuringElement(MORPH_RECT, Size(9, 1));
 	morphologyEx(bin_img, connected, MORPH_CLOSE, morphKernel);
 	namedWindow("Connected Image", WINDOW_AUTOSIZE);
-	imshow("Connected Image", connected);
+	// imshow("Connected Image", connected);
 
 	Mat mask = Mat::zeros(bin_img.size(), CV_8UC1);
 	vector<vector<Point>> contour;
@@ -237,7 +237,7 @@ vector<Mat> extract(string input_image) {
 	findContours(connected, contour, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
 
 	namedWindow("Out Image", WINDOW_AUTOSIZE);
-	imshow("Out Image", out_img);
+	// imshow("Out Image", out_img);
 	
 	int contour_index = 0;
 	while(contour_index >= 0){
@@ -261,52 +261,89 @@ vector<Mat> extract(string input_image) {
 	return outs;
 }
 
-vector<vector<Mat>> get_individual_characters(vector<Mat> images){
-	vector<vector<Mat>> characters_words;
+void get_individual_characters(vector<Mat> images, vector<vector<Mat>> & characters_words){
+	// vector<vector<Mat>> characters_words;
 
-	for(int x = 0; x < images.size(); x++){
-		Mat src_img = images[x];
+	// for(int x = 0; x < images.size(); x++){
+	// 	Mat src_img = images[x];
+	// 	Mat grey;
+	// 	cvtColor(src_img, grey, CV_BGR2GRAY);
+	// 	Mat bin_img;
+	// 	threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
+	// 	// namedWindow("Bin Image", WINDOW_AUTOSIZE);
+		// imshow("Bin Image", bin_img);
+	// 	bitwise_not(bin_img, bin_img);
+	// 	// namedWindow("Bin2 Image", WINDOW_AUTOSIZE);
+		// imshow("Bin2 Image", bin_img);
+	// 	vector<Mat> ret_img = regionDetection(bin_img);
+	// 	characters_words.push_back(ret_img);
+	// }
+	characters_words.resize(images.size());
+	for(int i=0; i < images.size(); i++) {
+		Mat src_img = images[i];
 		Mat grey;
 		cvtColor(src_img, grey, CV_BGR2GRAY);
 		Mat bin_img;
 		threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
-		namedWindow("Bin Image", WINDOW_AUTOSIZE);
-		imshow("Bin Image", bin_img);
 		bitwise_not(bin_img, bin_img);
-		namedWindow("Bin2 Image", WINDOW_AUTOSIZE);
-		imshow("Bin2 Image", bin_img);
 		vector<Mat> ret_img = regionDetection(bin_img);
-		characters_words.push_back(ret_img);
-	}
-	int count = 0;
-	for(int i = 0; i < characters_words.size(); i++){
-		cout << characters_words[i].size() << endl;
-		vector<Mat> ret_img = characters_words.at(i);
-		for(int x = 0; x < ret_img.size(); x++){
-			Mat grey_ret = ret_img[x];
+		for(int j=0; j < ret_img.size(); j++) {
+			// characters_words[i].push_back(ret_img[j]);
+			imshow("Image", ret_img[j]);
+			Mat grey_ret = ret_img[j];
 			Mat bin_img_ret;
 			threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
-			namedWindow("Ret" + to_string(count), WINDOW_AUTOSIZE);
-			imshow("Ret" + to_string(count), bin_img_ret);
-			imwrite("Ret" + to_string(count) + ".jpg", bin_img_ret);	
-			count++;	
+			characters_words[i].push_back(bin_img_ret);
+			// imshow("Image", bin_img_ret);
 		}
 	}
+	// for(int i=0; i < characters_words.size(); i++) {
+	// 	for(int j=0; j < characters_words[i].size(); j++) {
+			// imshow("Image", characters_words[i][j]);	
+	// 		waitKey(0);
+	// 	}
+	// }
+	// int count = 0;
+	// for(int i = 0; i < characters_words.size(); i++){
+	// 	cout << characters_words[i].size() << endl;
+	// 	vector<Mat> ret_img = characters_words.at(i);
+	// 	for(int x = 0; x < ret_img.size(); x++){
+	// 		Mat grey_ret = ret_img[x];
+	// 		Mat bin_img_ret;
+	// 		threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
+	// 		// namedWindow("Ret" + to_string(count), WINDOW_AUTOSIZE);
+			// imshow("Ret" + to_string(count), bin_img_ret);
+	// 		// characters_words[i].push_back(bin_img_ret);
+	// 		// imwrite("Ret" + to_string(count) + ".jpg", bin_img_ret);	
+	// 		count++;	
+	// 	}
+
+	// }
 	
-	return characters_words;
+	// return characters_words;
 }
+
 int main(int argc, char* argv[]){
 	string input(argv[1]);
 	vector<Mat> images = extract(input);
-	for(int i=0; i < images.size(); i++) {
-		namedWindow("Cropped" + to_string(i), WINDOW_AUTOSIZE);
-		imshow("Cropped" + to_string(i), images[i]);
-		imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
-		cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
-	}
+	// for(int i=0; i < images.size(); i++) {
+	// 	namedWindow("Cropped" + to_string(i), WINDOW_AUTOSIZE);
+		// imshow("Cropped" + to_string(i), images[i]);
+	// 	imwrite("Cropped" + to_string(i) + ".jpg", images[i]);	
+	// 	cout << "x, y: " << images[i].rows << " " << images[i].cols << endl;
+	// }
 	
-	get_individual_characters(images);
+	// vector<vector<Mat>> characters = get_individual_characters(images);
 
+	vector<vector<Mat>> characters;
+	get_individual_characters(images, characters);
+	// get_individual_characters(images);
+	for(int i=0; i < characters.size(); i++) {
+		for(int j=0; j < characters[i].size(); j++) {
+			imshow("Character", characters[i][j]);
+			waitKey(0);
+		}
+	}
 	waitKey();
 	destroyAllWindows();
 	return 0;

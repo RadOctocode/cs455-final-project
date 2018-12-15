@@ -49,7 +49,6 @@ struct Coord {
 };
 Mat binary(Mat image, int thresh);
 Mat negative(Mat image);
-Mat reverse(Mat binary_image);
 Mat erosion(Mat binary_image, Kernel k); // sum equals (kernel-width)*(kernel-height)*255
 Mat erosion_iter(Mat binary_image, Kernel k, int iter);
 Mat dilation(Mat binary_image, Kernel k);	// sum >= 255

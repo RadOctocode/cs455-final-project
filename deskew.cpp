@@ -75,7 +75,7 @@ Mat compute_skew(Mat image1){
 	warpAffine(image,rotated,rot_im,image.size(),INTER_CUBIC);
 	return rotated;
 }
-
+/*
 int main( int argc, char** argv ){
 
     Mat odd,even,thresEven,thresOdd;
@@ -95,7 +95,7 @@ int main( int argc, char** argv ){
     waitKey(0);                                          // Wait for a keystroke in the window
     return 0;
 }
-
+*/
 
 /*
  *K1 - k means
