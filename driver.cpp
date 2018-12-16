@@ -111,20 +111,21 @@ int main(int argc, char ** argv) {
 			waitKey(0);
 		}
 	}
-	/*
+	
 	Timer tmr;
+	tmr.reset();
 	for(int i=0; i < characters.size(); i++) {
 		for(int j=0; j < characters[i].size(); j++) {
 		 	// classify(characters[i][j]);
-			tmr.reset();
-		 	cout << classify(characters[i][j]) << " ";
-		 	cout << tmr.elapsed() << " seconds"<< endl;
+		 	cout << classify(characters[i][j]);
 		 	// imshow("Char", characters[i][j]);
 		 	// waitKey(0);
 		}
-		cout << "New Word: " << endl;
+		// cout << "New Word: " << endl;
+		cout << " ";
 	}
-	*/
+	cout << endl;
+	cout << tmr.elapsed() << " seconds"<< endl;
 	return 0;
 }
 
