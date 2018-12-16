@@ -134,8 +134,8 @@ vector<Mat> regionDetection(Mat& img){
 	vector<Mat> outs;
 	//color all regions with medium color (120)
 	//find the smallest and largest regions
-	for(int x = 0; x < img.rows; x++){
-		for(int y = 0; y < img.cols; y++){
+	for(int y = 0; y < img.cols; y++){
+		for(int x = 0; x < img.rows; x++){
 			if(img.at<uchar>(x,y) == 255){
 				vector<int> matri = connected_comp(img, x, y, 120, 255);
 				int total_pixels = matri.at(0);
@@ -260,6 +260,7 @@ vector<Mat> extract(string input_image) {
 	
 	// waitKey();
 	// destroyAllWindows();
+	reverse(outs.begin(), outs.end());
 	return outs;
 }
 
@@ -325,6 +326,7 @@ void get_individual_characters(vector<Mat> images, vector<vector<Mat>> & charact
 	// return characters_words;
 }
 
+/*
 int main(int argc, char* argv[]){
 	string input(argv[1]);
 	vector<Mat> images = extract(input);
@@ -350,6 +352,6 @@ int main(int argc, char* argv[]){
 	destroyAllWindows();
 	return 0;
 }
-
+*/
 
 

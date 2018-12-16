@@ -6,15 +6,20 @@
 #include <iostream>
 #include <vector>
 #include "morphological_ops.hpp"
+#include <sys/types.h>
+#include <dirent.h>
+
 
 void skeleton_tests();
 void preprocessing_tests();
 Mat union_binary_images(Mat bin_img1, Mat bin_img2);
 bool isZero(Mat bin_img);
 Mat skeleton(Mat binary_image, Kernel k);
+Mat skeleton(Mat binary_image);
 // subtracts bin_img2 from bin_img1
 Mat subtract(Mat bin_img1, Mat bin_img2);
 
+char classify(Mat img);
 
 Mat remove_borders(Mat binary_image);
 //scale img1  to img2 size
@@ -24,18 +29,188 @@ Mat scale_image(Mat bin_img1, Mat bin_img2, char axis);
 //percentage image 1 overlaps image 2
 float percentage_overlap(Mat bin_img1, Mat bin_img2);
 
+struct Glyph {
+	Mat image;
+	char letter = '0';
+	Glyph(Mat img, char l) {image = img; letter = l;}
+};
 
+vector<Glyph> load_glyphs(string directory);
 //remove borders off a binary image
 //scale either along "x" or "y"
 //percentage overlap for 2 binary images
+void read_directory(const std::string& name, vector<string>& v);
+
+
+
+
+vector<Glyph> glyphs = load_glyphs("glyphs");
+
+void scale_to_match(Mat & img1, Mat & img2);
 
 /*
-int main() {
+int main(int argc, char** argv) {
 	// skeleton_tests();
-	preprocessing_tests();
+	// preprocessing_tests();
+	// cout << "pattern matching" << endl;
+	Mat glyph_1 = glyphs[42].image.clone();
+	Mat glyph_2 = glyphs[46].image.clone();
+	// imshow("glyph_1", glyph_1);
+	// imshow("glyph_2", glyph_2);
+	// waitKey(0);
+	// scale_to_match(glyph_1, glyph_2);
+	vector<string> sample_images_2;
+	read_directory("sample_images2", sample_images_2);
+	for(int i=0; i < sample_images_2.size(); i++) {
+		if(sample_images_2[i] != "." && sample_images_2[i] != ".." && sample_images_2[i] != ".DS_Store") {
+			Mat im = imread("sample_images2/" + sample_images_2[i]);
+			Mat image;
+			cvtColor( im, image, COLOR_BGR2GRAY);
+			imshow(sample_images_2[i], image); 
+			waitKey(0);
+
+			image = negative(binary(image, 50));
+			Mat copy_img = image.clone();
+			// imshow("copy_img", copy_img);
+			// waitKey(0);
+			// scale_to_match(copy_img, glyph_2);
+			cout << classify(copy_img) << endl;
+		}
+	}
 	return 0;
 }
 */
+
+//image should already be binary & negative
+char classify(Mat img) {
+	// Mat skeletoned = skeleton(img);
+	// imshow("skeleton", skeletoned);
+	Mat img_copy = img.clone();
+	float largest_score = 0;
+	char best_match = '0';
+	for(int i=0; i < glyphs.size(); i++) {
+		float score = 0;
+		Mat glyph_copy = glyphs[i].image.clone();
+		//percentage overlap image vs. glyph
+		scale_to_match(img_copy, glyph_copy);
+		Mat skeletoned_glyph = skeleton(glyph_copy);
+		Mat skeletoned_img = skeleton(img_copy);
+		score += 0.5*percentage_overlap(skeletoned_img, glyph_copy);
+		score += 0.5*percentage_overlap(glyph_copy, img_copy);
+		// imshow("skeleton_img", skeletoned_img);
+		// imshow("skeletoned_glyph", skeletoned_glyph);
+		// imshow("glyph_copy", glyph_copy);
+		// waitKey(0);
+
+		//percentage glyph vs. image
+		// cout << "Glyph: " << glyphs[i].letter << " Score: " << score << endl;
+		if(score > largest_score) {
+			largest_score = score;
+			best_match = glyphs[i].letter;
+		}
+	}
+	return best_match;
+}
+void read_directory(const std::string& name, vector<string>& v)
+{
+    DIR* dirp = opendir(name.c_str());
+    struct dirent * dp;
+    while ((dp = readdir(dirp)) != NULL) {
+        v.push_back(dp->d_name);
+    }
+    closedir(dirp);
+}
+
+//expects a 'negative' image
+void scale_to_match(Mat& img1, Mat& img2) {
+
+	//remove borders
+	img1 = remove_borders(img1);
+	img2 = remove_borders(img2);
+
+	// imshow("Img1", img1);
+	// imshow("Img2", img2);
+	// waitKey(0);
+	//scale height of smaller to larger
+	if(img1.rows > img2.rows) img2 =scale_image(img2, img1, 'y');
+	else img1 = scale_image(img1, img2, 'y');
+
+	//add borders to smaller image
+	int diff = abs(img2.cols - img1.cols) / 2;
+
+	int cols = max(img2.cols, img1.cols);
+	int rows = max(img2.rows, img1.rows);
+
+	//make img2 the wider image
+	bool switched = false;
+	if (img1.cols > img2.cols) {
+		Mat temp = img1;
+		img1 = img2;
+		img2 = temp;
+		switched = true;
+	}
+	Mat smaller = Mat(rows, cols, CV_8UC1, Scalar(0));
+	for(int i=0; i < img1.rows; i++) {
+		for(int j=0; j < img1.cols; j++) {
+			smaller.at<uchar>(i, j+diff) = (int)img1.at<uchar>(i,j);
+		}
+	}
+	img1 = smaller;
+
+	img1 = binary(img1, 50);
+	img2 = binary(img2, 50);
+
+	if(switched) {
+		Mat temp = img1;
+		img1 = img2;
+		img2 = temp;
+	}
+	// imshow("Img1", img1);
+	// imshow("Img2", img2);
+	// waitKey(0);
+}
+
+vector<Glyph> load_glyphs(string directory) {
+	vector<Glyph> ret_val;
+	vector<string> glyph_names;
+	read_directory(directory, glyph_names);
+	for(int i=0; i < glyph_names.size(); i++) {
+		if(glyph_names[i] != "." && glyph_names[i] != ".." && glyph_names[i] != ".DS_Store") {
+			char letter = '0';
+			if(glyph_names[i] == "comma.png") letter = ',';
+			else if(glyph_names[i] == "exclamation.png") letter = '!';
+			else if(glyph_names[i] == "period.png") letter = '.';
+			else if(glyph_names[i] == "question_mark.png") letter = '?';
+			else if(glyph_names[i] == "semicolon.png") letter = ';';
+			else if(glyph_names[i][0] == '_') letter = glyph_names[i][1];
+			else letter = glyph_names[i][0];
+			
+			Mat x = imread(directory + "/" + glyph_names[i]);
+			Mat image;
+	 		cvtColor( x, image, COLOR_BGR2GRAY );
+			image = binary(image, 50);
+			image = negative(image);
+			image = remove_borders(image);
+			ret_val.push_back(Glyph(image, letter));
+			// imshow(string(1, letter), image);
+			// waitKey(0);
+		}
+	}
+	return ret_val;
+}
+
+//load in vectors of glyphs
+	//remove borders
+	//skip '.' and '..'
+//scale to match size
+	//remove borders
+	//scale to height
+	//add or subtract off sides
+//classify:
+	//build some DIFFERENT examples
+	//skeleton -> both
+	// 0.5* percentage_overlap(a,b) + 0.5*percentage_overlap(b,a)
+
 
 Mat subtract(Mat bin_img1, Mat bin_img2) {
 	if(bin_img1.rows != bin_img2.rows || bin_img1.cols != bin_img2.cols) 
@@ -136,6 +311,16 @@ void skeleton_tests() {
  	waitKey(0);
 }
 
+Mat skeleton(Mat binary_image) {
+	Kernel erosion_kernel1(1, 1, 3, 3);
+ 	int erosion_data_2D_array[3][3] = {{0,1,0}, {1,1,1}, {0,1,0}};
+ 	for(int i=0; i< 3; i++) {
+ 		for(int j=0; j< 3; j++) {
+ 			erosion_kernel1.data[i][j] = erosion_data_2D_array[i][j];
+ 		}
+ 	}	
+ 	return skeleton(binary_image, erosion_kernel1);
+}
 Mat skeleton(Mat binary_image, Kernel k) {
 
 	// Mat eroded_n = erosion_iter(binary_image, k, 3);
@@ -295,6 +480,8 @@ float percentage_overlap(Mat bin_img1, Mat bin_img2) {
 		}
 	}
 	p_overlap = p_overlap / total_pixels;
+	// cout << "p_overlap: " << p_overlap << endl;
+	// cout << "total_pixels: " << total_pixels << endl;
 	return p_overlap;
 }
 

@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 
-
 // dilation operation
 // erosion operation
 // binary operation with threshold
