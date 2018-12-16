@@ -70,6 +70,8 @@ string classify(Mat bin_img) {
 
 */
 
+
+//Timer class taken from here: https://stackoverflow.com/questions/728068/how-to-calculate-a-time-difference-in-c
 class Timer
 {
 public:
@@ -86,18 +88,30 @@ private:
 };
 
 int main(int argc, char ** argv) {
-
-	vector<Mat> images = extract("sample_images/hello_world_helv.png");
+	
+	Mat deskewed = binary(negative(compute_skew(imread(argv[1], 0))), 50);
+	imshow("Deskewed", deskewed);
+	waitKey(0);
+	imwrite("deskewed.jpg", deskewed);
+	
+	vector<Mat> images = extract("deskewed.jpg");
+	for(int i=0; i < images.size(); i++) {
+		imshow("images", images[i]);
+		waitKey(0);
+	}
+	
 	vector<vector<Mat>> characters;
 	get_individual_characters(images, characters);
+
 	for(int i=0; i < characters.size(); i++) {
 		cout << "New Word: " << endl;
 		for(int j=0; j < characters[i].size(); j++) {
+			cout << characters[i][j].rows << " " << characters[i][j].cols << endl;
 			imshow("CHARACTER", characters[i][j]);
 			waitKey(0);
 		}
 	}
-	
+	/*
 	Timer tmr;
 	for(int i=0; i < characters.size(); i++) {
 		for(int j=0; j < characters[i].size(); j++) {
@@ -110,7 +124,7 @@ int main(int argc, char ** argv) {
 		}
 		cout << "New Word: " << endl;
 	}
-	
+	*/
 	return 0;
 }
 

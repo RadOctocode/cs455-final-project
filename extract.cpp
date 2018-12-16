@@ -38,7 +38,7 @@ vector<int> connected_comp(Mat& img, int x, int y, uchar set_color, uchar change
     max_x  = -1;
     max_y  = -1;
     
-
+    // imshow("Connected Component", img);
     while(!queue_x.empty() && !queue_y.empty()) {
         int i = queue_x.front();
         int j = queue_y.front();
@@ -132,6 +132,8 @@ vector<Mat> regionDetection(Mat& img){
 	int max_y = -1;
 
 	vector<Mat> outs;
+	imshow("regionDetection", img);
+	waitKey(0);
 	//color all regions with medium color (120)
 	//find the smallest and largest regions
 	for(int y = 0; y < img.cols; y++){
@@ -147,10 +149,13 @@ vector<Mat> regionDetection(Mat& img){
 					Mat bin_img_ret;
 					threshold(cropped, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
 				//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-					imshow("Ret Image", cropped);
-				//	waitKey();
-				//	destroyAllWindows();
-					outs.push_back(bin_img_ret);
+					// cout << "regionDetection line 150 " << cropped.rows << " " << cropped.cols << endl;
+					if(cropped.rows > 0 && cropped.cols > 0) {
+						// imshow("Ret Image", cropped);
+						// waitKey();
+						//	destroyAllWindows();
+						outs.push_back(bin_img_ret);
+					}
 				}
 
 			
@@ -181,7 +186,8 @@ vector<Mat> regionDetection(Mat& img){
 		Mat cropped = img(roi);
 	//	outs.push_back(cropped);
 	//	namedWindow("Ret Image", WINDOW_AUTOSIZE);
-		imshow("Ret Image", cropped);
+		// cout << "Region detection line 187 " << cropped.rows << " " << cropped.cols << endl;
+		// imshow("Ret Image", cropped);
 	//	waitKey();
 	//	destroyAllWindows();
 	}
@@ -239,7 +245,7 @@ vector<Mat> extract(string input_image) {
 	findContours(connected, contour, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
 
 	namedWindow("Out Image", WINDOW_AUTOSIZE);
-	// imshow("Out Image", out_img);
+	imshow("Out Image", out_img);
 	
 	int contour_index = 0;
 	while(contour_index >= 0){
@@ -249,7 +255,7 @@ vector<Mat> extract(string input_image) {
 		drawContours(mask, contour, contour_index, Scalar(255,255,255), CV_FILLED);
 		double ratio = (double)countNonZero(maskROI)/(rect.width*rect.height);
 		if(ratio > .50 && (rect.height > 10 && rect.width > 10)){
-			rectangle(out_img, rect, Scalar(0,255,0), 2);
+			// rectangle(out_img, rect, Scalar(0,255,0), 2);
 			Mat cropped = out_img(rect);
 			outs.push_back(cropped);
 		}
@@ -287,12 +293,15 @@ void get_individual_characters(vector<Mat> images, vector<vector<Mat>> & charact
 		Mat grey;
 		cvtColor(src_img, grey, CV_BGR2GRAY);
 		Mat bin_img;
-		threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
+		// threshold(grey, bin_img, 0.0, 255.0, THRESH_BINARY);
+		// threshold(grey, bin_img, 0.0, 255.0, 50);
+		bin_img = createBinaryImage(grey);
 		bitwise_not(bin_img, bin_img);
 		vector<Mat> ret_img = regionDetection(bin_img);
 		for(int j=0; j < ret_img.size(); j++) {
 			// characters_words[i].push_back(ret_img[j]);
-			imshow("Image", ret_img[j]);
+			// cout << "get_individual_characters line 297 " << ret_img[j].rows << " " << ret_img[j].cols << endl;
+			// imshow("Image", ret_img[j]);
 			Mat grey_ret = ret_img[j];
 			Mat bin_img_ret;
 			threshold(grey_ret, bin_img_ret, 0.0, 255.0, THRESH_BINARY);
